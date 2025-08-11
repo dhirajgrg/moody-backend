@@ -8,11 +8,11 @@ import songsRoutes from "./routes/songs.route.js"
 const app = express()
 app.use(express.json())
 
-const allowedOrigins = [
-	"http://localhost:5173",
-	"http://localhost:4173",
-	process.env.FRONTEND_URL,
-]
+const allowedOrigins = ["http://localhost:5173", "http://localhost:4173"]
+
+if (process.env.FRONTEND_URL) {
+	allowedOrigins.push(process.env.FRONTEND_URL)
+}
 
 app.use(
 	cors({
