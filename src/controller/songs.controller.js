@@ -4,47 +4,62 @@ import { uploadSong } from "../services/storage.service.js"
 export async function addSong(req, res) {
 	try {
 		const { title, artist, expression } = req.body
-		console.log(req.file)
 		if (!req.file) {
-			return res.status(400).json({ message: "no file uploaded" })
+			return res.status(400).json({ message: "No file uploaded" })
 		}
-		// upload song to Storage
+
 		const songsUrl = await uploadSong(req.file, "songs")
 
-		// save song to DB
 		const song = await songModel.create({
 			title,
 			artist,
-
 			expression,
 			songUrl: songsUrl.url,
 		})
-		res.status(201).json({ mesage: "songs added successfully", song })
+
+		res.status(201).json({ message: "Song added successfully", song })
 	} catch (error) {
-		res.status(500).json({ message: "fail to add songs", error })
-	}
-}
-export async function getAllSongs(req, res) {
-	try {
-		const songs = await songModel.find()
-		if (!songs) {
-			return res.status(404).json({ message: "songs not found" })
-		}
-		res.json(songs)
-	} catch (error) {
-		res.status(500).json({ message: "fail to get songs", error })
+		res.status(500).json({
+			message: "Failed to add song",
+			error: error.message,
+		})
 	}
 }
 
-export async function singleSong(req, res) {
+export async function getAllSongs(req, res) {
+	try {
+		const songs = await songModel.find()
+
+		if (songs.length === 0) {
+			return res.status(404).json({ message: "No songs found" })
+		}
+
+		res.status(200).json({ message: "success", songs })
+	} catch (error) {
+		res.status(500).json({
+			message: "Failed to get songs",
+			error: error.message,
+		})
+	}
+}
+
+export async function getSong(req, res) {
 	try {
 		const { expression } = req.params
-		const song = await songModel.findOne({ expression })
-		if (!song) {
-			return res.status(404).json({ message: "song not found" })
+
+		const songs = await songModel.find({
+			expression: { $regex: `^${expression}$`, $options: "i" },
+		})
+
+		if (songs.length === 0) {
+			return res.status(404).json({ message: "No songs found" })
 		}
-		res.status(200).json({ message: "success", song })
+
+		res.status(200).json({ message: "success", songs })
 	} catch (error) {
-		res.status(500).json({ message: "fail to get song", error })
+		res.status(500).json({
+			message: "Failed to get songs",
+			error: error.message,
+		})
 	}
 }
